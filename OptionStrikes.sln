@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OptionStrikes", "OptionStrikes\OptionStrikes.csproj", "{48B15F3A-349C-4A4B-96EE-D77A477EB9F2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{48B15F3A-349C-4A4B-96EE-D77A477EB9F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48B15F3A-349C-4A4B-96EE-D77A477EB9F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48B15F3A-349C-4A4B-96EE-D77A477EB9F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48B15F3A-349C-4A4B-96EE-D77A477EB9F2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {51715BFD-30FA-4350-B2C6-769E70CD812E}
+	EndGlobalSection
+EndGlobal
