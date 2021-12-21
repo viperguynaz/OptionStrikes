@@ -373,11 +373,70 @@ namespace OptionStrikes.Entities
 
         [JsonPropertyName("error")]
         public object? Error { get; set; }
-   }
+
+        public List<ExpirationOption>? OptionsChain
+        {
+            get
+            {
+                var options = new List<ExpirationOption>();
+
+                if (Result?[0].Strikes != null)
+                {
+                    foreach (var strike in Result?[0].Strikes)
+                    {
+                        var call = Result?[0].Options?[0]?.Calls?.First<Call>(call => call.Strike == strike);
+                        var put = Result?[0].Options?[0]?.Puts?.First<Put>(put => put.Strike == strike);
+                        options.Add(new ExpirationOption
+                        {
+                            Strike = strike,
+                            CallAsk = call?.Ask ?? 0,
+                            CallBid = call?.Bid ?? 0,
+                            CallChange = call?.Change ?? 0,
+                            CallLastPrice = call?.LastPrice ?? 0,
+                            CallOpenInterest = call?.OpenInterest ?? 0,
+                            CallPercentChange = call?.PercentChange ?? 0,
+                            CallVolume = call?.Volume ?? 0,
+                            PutAsk = put?.Ask ?? 0,
+                            PutBid = put?.Bid ?? 0,
+                            PutChange = put?.Change ?? 0,
+                            PutLastPrice = put?.LastPrice ?? 0,
+                            PutOpenInterest = put?.OpenInterest ?? 0,
+                            PutPercentChange = put?.PercentChange ?? 0,
+                            PutVolume = put?.Volume ?? 0
+                        }
+                        );
+                    }
+                }
+
+                return options;
+            }
+
+        }
+    }
 
     public class YahooOptionsResponse
     {
         [JsonPropertyName("optionChain")]
         public OptionChain? OptionChain { get; set; }
     }
+
+    public class ExpirationOption
+    {
+        public int CallVolume { get; set; }
+        public int CallOpenInterest { get; set; }
+        public double CallLastPrice { get; set; }
+        public double CallChange { get; set; }
+        public double CallPercentChange { get; set; }
+        public double CallBid { get; set; }
+        public double CallAsk { get; set; }
+        public double Strike { get; set; }
+        public int PutVolume { get; set; }
+        public int PutOpenInterest { get; set; }
+        public double PutLastPrice { get; set; }
+        public double PutChange { get; set; }
+        public double PutPercentChange { get; set; }
+        public double PutBid { get; set; }
+        public double PutAsk { get; set; }
+    }
+
 }

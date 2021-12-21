@@ -4,59 +4,45 @@
 
 <PageTitle>Weather forecast</PageTitle>
 
-<h1>Weather forecast</h1>
+<h1>Option Chains</h1>
 
-<p>This component demonstrates fetching data from the server.</p>
-
-@if (forecasts == null)
+@if (yahooResponse == null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
-    <p>options count = @yahooResponse?.OptionChain?.Result?[0].Options?[0]?.Calls?.Count</p>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <p>Call options for @yahooResponse?.OptionChain?.Result?[0].Quote?.Symbol | Last price: @yahooResponse?.OptionChain?.Result?[0].Quote?.RegularMarketPrice</p>
+    <RadzenDataGrid Data="@options" TItem="ExpirationOption" >
+        <Columns>
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallVolume" Title="Volume"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallOpenInterest" Title="OI"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallLastPrice" Title="Last"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallChange" Title="Change"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallBid" Title="Bid"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallAsk" Title="Ask"  />
+
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="Strike" Title="Strike"  />
+
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutBid" Title="Bid"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutAsk" Title="Ask"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutLastPrice" Title="Last"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutChange" Title="Change"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutVolume" Title="Volume"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutOpenInterest" Title="OI"  />
+       </Columns>
+    </RadzenDataGrid>
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
     private YahooOptionsResponse? yahooResponse;
+    private List<ExpirationOption>? options;
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
-        var request = new YahooOptionsRequest("AAPL");
+        var request = new YahooOptionsRequest("AAPL", 1642723200);
         yahooResponse = await Http.GetFromJsonAsync<YahooOptionsResponse>(request.Url);
-    }
 
-    public class WeatherForecast
-    {
-        public DateTime Date { get; set; }
-
-        public int TemperatureC { get; set; }
-
-        public string? Summary { get; set; }
-
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        options = yahooResponse?.OptionChain?.OptionsChain;
     }
 }
