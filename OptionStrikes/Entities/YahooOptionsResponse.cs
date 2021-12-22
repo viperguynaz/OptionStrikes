@@ -374,43 +374,63 @@ namespace OptionStrikes.Entities
         [JsonPropertyName("error")]
         public object? Error { get; set; }
 
-        public List<ExpirationOption>? OptionsChain
+        public List<ExpirationOption>? ExpirationOptions
         {
             get
             {
+                var splitStrikes = 10;
+                var strikes = Result?[0].Strikes ?? new List<double>();
+                var price = Result?[0].Quote?.RegularMarketPrice ?? 0;
                 var options = new List<ExpirationOption>();
+                var calls = Result?[0].Options?[0]?.Calls ?? new List<Call>();
+                var puts = Result?[0].Options?[0]?.Puts ?? new List<Put>();
 
-                if (Result?[0].Strikes != null)
+                var strikeDiffs = strikes.Select(x => Math.Abs(price - x)).ToList();
+
+                var lowStrikeIndex = 0;
+                while (strikes[lowStrikeIndex] < price && lowStrikeIndex < strikes.Count)
                 {
-                    foreach (var strike in Result?[0].Strikes)
+                    lowStrikeIndex++;
+                }
+
+                var splitStart = Math.Max(0, (lowStrikeIndex - splitStrikes));
+
+                // this assumes calls & puts are ordered by strike
+                for (int c = splitStart, p = splitStart; c < calls.Count && p < puts.Count && options.Count < splitStrikes*2; c++, p++)
+                {
+                    if (calls[c].Strike == puts[p].Strike)
                     {
-                        var call = Result?[0].Options?[0]?.Calls?.First<Call>(call => call.Strike == strike);
-                        var put = Result?[0].Options?[0]?.Puts?.First<Put>(put => put.Strike == strike);
                         options.Add(new ExpirationOption
                         {
-                            Strike = strike,
-                            CallAsk = call?.Ask ?? 0,
-                            CallBid = call?.Bid ?? 0,
-                            CallChange = call?.Change ?? 0,
-                            CallLastPrice = call?.LastPrice ?? 0,
-                            CallOpenInterest = call?.OpenInterest ?? 0,
-                            CallPercentChange = call?.PercentChange ?? 0,
-                            CallVolume = call?.Volume ?? 0,
-                            PutAsk = put?.Ask ?? 0,
-                            PutBid = put?.Bid ?? 0,
-                            PutChange = put?.Change ?? 0,
-                            PutLastPrice = put?.LastPrice ?? 0,
-                            PutOpenInterest = put?.OpenInterest ?? 0,
-                            PutPercentChange = put?.PercentChange ?? 0,
-                            PutVolume = put?.Volume ?? 0
-                        }
-                        );
+                            Strike = calls[c].Strike,
+                            CallAsk = calls[c].Ask,
+                            CallBid = calls[c].Bid,
+                            CallChange = calls[c].Change,
+                            CallLastPrice = calls[c].LastPrice,
+                            CallOpenInterest = calls[c].OpenInterest,
+                            CallPercentChange = calls[c].PercentChange,
+                            CallVolume = calls[c].Volume,
+                            PutAsk = puts[p].Ask,
+                            PutBid = puts[p].Bid,
+                            PutChange = puts[p].Change,
+                            PutLastPrice = puts[p].LastPrice,
+                            PutOpenInterest = puts[p].OpenInterest,
+                            PutPercentChange = puts[p].PercentChange,
+                            PutVolume = puts[p].Volume
+                        });
+                    }
+                    else if (calls[c].Strike < puts[p].Strike)
+                    {
+                        c++;
+                    }
+                    else
+                    {
+                        p++;
                     }
                 }
 
                 return options;
             }
-
         }
     }
 

@@ -13,23 +13,45 @@
 else
 {
     <p>Call options for @yahooResponse?.OptionChain?.Result?[0].Quote?.Symbol | Last price: @yahooResponse?.OptionChain?.Result?[0].Quote?.RegularMarketPrice</p>
-    <RadzenDataGrid Data="@options" TItem="ExpirationOption" >
+    <RadzenDataGrid Data="@options" TItem="ExpirationOption" CellRender="@CellRender">
         <Columns>
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallVolume" Title="Volume"  />
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallOpenInterest" Title="OI"  />
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallLastPrice" Title="Last"  />
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallChange" Title="Change"  />
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallBid" Title="Bid"  />
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallAsk" Title="Ask"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallVolume" Title="Volume" TextAlign="TextAlign.Right" />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallOpenInterest" Title="OI" TextAlign="TextAlign.Right" />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallLastPrice" Title="Last" FormatString="{0:C2}" TextAlign="TextAlign.Right" />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallChange" Title="Change" FormatString="{0:C2}" TextAlign="TextAlign.Right">
+                <Template Context="data">
+                    @if (data.CallChange < 0)
+                    {
+                        <span style='color:red'>@string.Format("{0:C2}", @data.CallChange)</span>
+                    }
+                    else
+                    {
+                        <span style='color:green'>@string.Format("{0:C2}", @data.CallChange)</span>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallBid" Title="Bid" FormatString="{0:C2}" TextAlign="TextAlign.Right" />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="CallAsk" Title="Ask" FormatString="{0:C2}" TextAlign="TextAlign.Right" />
 
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="Strike" Title="Strike"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="Strike" Title="Strike" FormatString="{0:C2}" TextAlign="TextAlign.Right" />
 
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutBid" Title="Bid"  />
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutAsk" Title="Ask"  />
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutLastPrice" Title="Last"  />
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutChange" Title="Change"  />
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutVolume" Title="Volume"  />
-            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutOpenInterest" Title="OI"  />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutBid" Title="Bid" FormatString="{0:C2}" TextAlign="TextAlign.Right" />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutAsk" Title="Ask" FormatString="{0:C2}" TextAlign="TextAlign.Right" />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutLastPrice" Title="Last" FormatString="{0:C2}" TextAlign="TextAlign.Right" />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutChange" Title="Change" FormatString="{0:C2}" TextAlign="TextAlign.Right">
+                <Template Context="data">
+                    @if (data.PutChange < 0)
+                    {
+                        <span style='color:red'>@string.Format("{0:C2}", @data.PutChange)</span>
+                    }
+                    else
+                    {
+                        <span style='color:green'>@string.Format("{0:C2}", @data.PutChange)</span>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutVolume" Title="Volume" TextAlign="TextAlign.Right" />
+            <RadzenDataGridColumn TItem="ExpirationOption" Property="PutOpenInterest" Title="OI" TextAlign="TextAlign.Right" />
        </Columns>
     </RadzenDataGrid>
 }
@@ -37,12 +59,29 @@ else
 @code {
     private YahooOptionsResponse? yahooResponse;
     private List<ExpirationOption>? options;
+    private double price;
 
     protected override async Task OnInitializedAsync()
     {
         var request = new YahooOptionsRequest("AAPL", 1642723200);
         yahooResponse = await Http.GetFromJsonAsync<YahooOptionsResponse>(request.Url);
+        options = yahooResponse?.OptionChain?.ExpirationOptions;
+        price = yahooResponse?.OptionChain?.Result?[0].Quote?.RegularMarketPrice ?? 0;
+    }
 
-        options = yahooResponse?.OptionChain?.OptionsChain;
+    void CellRender(DataGridCellRenderEventArgs<ExpirationOption> args)
+    {
+        if ((args.Column.Property.StartsWith("Call") && args.Data.Strike <= price) || (args.Column.Property.StartsWith("Put") && args.Data.Strike > price))
+        {
+            args.Attributes.Add("style", "background-color:#f2f2f2");
+        }
+        else if (args.Column.Property == "Strike")
+        {
+            args.Attributes.Add("style", "background-color:#d1dbff");
+        }
+        else
+        {
+            args.Attributes.Add("style", "background-color:#ffffff");
+        }
     }
 }
