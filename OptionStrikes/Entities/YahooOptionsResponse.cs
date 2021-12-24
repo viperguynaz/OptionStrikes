@@ -1,8 +1,8 @@
 ﻿using System.Text.Json.Serialization;
+using OptionStrikes.Helpers;
 
 namespace OptionStrikes.Entities
 {
-    // YahooOptionsResponse myDeserializedClass = JsonConvert.DeserializeObject<YahooOptionsResponse>(myJsonResponse); 
     public class Quote
     {
         [JsonPropertyName("language")]
@@ -364,6 +364,9 @@ namespace OptionStrikes.Entities
 
         [JsonPropertyName("options")]
         public List<Option>? Options { get; set; }
+
+        public List<Expiration> ExpirationValues => ExpirationDates == null ? new List<Expiration>() : ExpirationDates.Select(ticks => new Expiration(ticks)).ToList();
+
     }
 
     public class OptionChain
@@ -457,6 +460,18 @@ namespace OptionStrikes.Entities
         public double PutPercentChange { get; set; }
         public double PutBid { get; set; }
         public double PutAsk { get; set; }
+    }
+
+    public class Expiration
+    {
+        public long Ticks { get; set; }
+        public string Date { get; set; }
+
+        public Expiration(long ticks)
+        {
+            Ticks = ticks;
+            Date = UnixTimeHelper.ToDateTime(ticks).ToShortDateString();
+        }
     }
 
 }

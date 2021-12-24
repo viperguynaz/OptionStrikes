@@ -12,7 +12,7 @@
 }
 else
 {
-    <p>Options for @Ticker | Last price: @Price</p>
+    <p>Options for @Ticker | Last price: @price | Expiration: <RadzenDropDown AllowClear="true" TValue="long" Data=@expirations TextProperty="Date" ValueProperty="Ticks" Change="@OnChange" /></p>
     <RadzenDataGrid Data="@options" TItem="ExpirationOption" CellRender="@CellRender">
         <Columns>
             <RadzenDataGridColumn TItem="ExpirationOption" Property="CallVolume" Title="Volume" TextAlign="TextAlign.Right" />
@@ -62,8 +62,9 @@ else
 
     private YahooOptionsResponse? yahooResponse;
     private List<ExpirationOption>? options;
-    private double Price;
-
+    private double price;
+    public List<long>? expirationDates;
+    private List<Expiration>? expirations;
 
     protected override async Task OnInitializedAsync()
     {
@@ -71,12 +72,14 @@ else
         var request = new YahooOptionsRequest(Ticker, 1642723200);
         yahooResponse = await Http.GetFromJsonAsync<YahooOptionsResponse>(request.Url);
         options = yahooResponse?.OptionChain?.ExpirationOptions;
-        Price = yahooResponse?.OptionChain?.Result?[0].Quote?.RegularMarketPrice ?? 0;
+        price = yahooResponse?.OptionChain?.Result?[0].Quote?.RegularMarketPrice ?? 0;
+        expirationDates = yahooResponse?.OptionChain?.Result?[0].ExpirationDates;
+        expirations = yahooResponse?.OptionChain?.Result?[0].ExpirationValues ?? new List<Expiration>();
     }
 
     void CellRender(DataGridCellRenderEventArgs<ExpirationOption> args)
     {
-        if ((args.Column.Property.StartsWith("Call") && args.Data.Strike <= Price) || (args.Column.Property.StartsWith("Put") && args.Data.Strike > Price))
+        if ((args.Column.Property.StartsWith("Call") && args.Data.Strike <= price) || (args.Column.Property.StartsWith("Put") && args.Data.Strike > price))
         {
             args.Attributes.Add("style", "background-color:#f2f2f2");
         }
@@ -88,5 +91,11 @@ else
         {
             args.Attributes.Add("style", "background-color:#ffffff");
         }
+    }
+
+    void OnChange(object value)
+    {
+        var str = value is IEnumerable<object> ? string.Join(", ", (IEnumerable<object>)value) : value;
+        Console.WriteLine(str);
     }
 }
