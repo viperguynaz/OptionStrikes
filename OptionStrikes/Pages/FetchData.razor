@@ -1,4 +1,4 @@
-﻿@page "/fetchdata"
+﻿@page "/fetchdata/{ticker?}"
 @using OptionStrikes.Entities
 @inject HttpClient Http
 
@@ -12,7 +12,7 @@
 }
 else
 {
-    <p>Call options for @yahooResponse?.OptionChain?.Result?[0].Quote?.Symbol | Last price: @yahooResponse?.OptionChain?.Result?[0].Quote?.RegularMarketPrice</p>
+    <p>Options for @Ticker | Last price: @Price</p>
     <RadzenDataGrid Data="@options" TItem="ExpirationOption" CellRender="@CellRender">
         <Columns>
             <RadzenDataGridColumn TItem="ExpirationOption" Property="CallVolume" Title="Volume" TextAlign="TextAlign.Right" />
@@ -57,21 +57,26 @@ else
 }
 
 @code {
+    [Parameter]
+    public string? Ticker { get; set; }
+
     private YahooOptionsResponse? yahooResponse;
     private List<ExpirationOption>? options;
-    private double price;
+    private double Price;
+
 
     protected override async Task OnInitializedAsync()
     {
-        var request = new YahooOptionsRequest("AAPL", 1642723200);
+        Ticker = Ticker ?? "AAPL";
+        var request = new YahooOptionsRequest(Ticker, 1642723200);
         yahooResponse = await Http.GetFromJsonAsync<YahooOptionsResponse>(request.Url);
         options = yahooResponse?.OptionChain?.ExpirationOptions;
-        price = yahooResponse?.OptionChain?.Result?[0].Quote?.RegularMarketPrice ?? 0;
+        Price = yahooResponse?.OptionChain?.Result?[0].Quote?.RegularMarketPrice ?? 0;
     }
 
     void CellRender(DataGridCellRenderEventArgs<ExpirationOption> args)
     {
-        if ((args.Column.Property.StartsWith("Call") && args.Data.Strike <= price) || (args.Column.Property.StartsWith("Put") && args.Data.Strike > price))
+        if ((args.Column.Property.StartsWith("Call") && args.Data.Strike <= Price) || (args.Column.Property.StartsWith("Put") && args.Data.Strike > Price))
         {
             args.Attributes.Add("style", "background-color:#f2f2f2");
         }
