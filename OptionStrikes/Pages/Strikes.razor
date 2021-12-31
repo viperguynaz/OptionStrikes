@@ -1,0 +1,119 @@
+﻿@page "/strikes/{ticker?}"
+@using Microsoft.JSInterop;
+@using OptionStrikes.Entities
+@inject HttpClient Http
+
+<PageTitle>Weather forecast</PageTitle>
+
+<h1>Option Chains</h1>
+
+@if (yahooResponse == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <p>Options for @Ticker | Last price: @price | Expiration: ???</p>
+
+
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Calls</th>
+                <th>Days</th>
+                <th>Puts</th>
+                <th>xxx</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var expiration in expirations ?? Enumerable.Empty<Expiration>())
+            {               
+                <tr class="expirations" @onclick="() => ToggleRow(expiration.Ticks)">
+                    <td>@expiration.Date.ToShortDateString()</td>
+                    <td>Calls</td>
+                    <td>@(((TimeSpan)(expiration.Date - DateTime.Now)).Days)d</td>
+                    <td>Puts</td>
+                    <td>xxx</td>
+                </tr>
+                <tr id="@expiration.Ticks" class="hide">
+                    <td colspan="5">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Volume</th>
+                                    <th>OI</th>
+                                    <th>Last</th>
+                                    <th>Change</th>
+                                    <th>Bid</th>
+                                    <th>Ask</th>
+                                    <th>Strike</th>
+                                    <th>Bid</th>
+                                    <th>Ask</th>
+                                    <th>Last</th>
+                                    <th>Change</th>
+                                    <th>Volume</th>
+                                    <th>OI</th>
+                                </tr>
+                            </thead>
+                            <tbody class="hide">
+                                @foreach (var option in options ?? Enumerable.Empty<ExpirationOption>())
+                                {
+                                    <tr>
+                                        <td>@option.CallVolume</td>
+                                        <td>@option.CallOpenInterest</td>
+                                        <td>@option.CallLastPrice.ToString("C2")</td>
+                                        <td data-monetary-amount="@option.CallChange.ToString("C2")"></td>
+                                        <td>@option.CallBid.ToString("C2")</td>
+                                        <td>@option.CallAsk.ToString("C2")</td>
+                                        <td>@option.Strike.ToString("C2")</td>
+                                        <td>@option.PutBid.ToString("C2")</td>
+                                        <td>@option.PutAsk.ToString("C2")</td>
+                                        <td>@option.PutLastPrice.ToString("C2")</td>
+                                        <td data-monetary-amount="@option.PutChange.ToString("C2")"></td>
+                                        <td>@option.PutVolume</td>
+                                        <td>@option.PutOpenInterest</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>    
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
+
+@code {
+    [Parameter]
+    public string? Ticker { get; set; }
+
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; }
+    private IJSObjectReference jsModule;
+
+    private YahooOptionsResponse? yahooResponse;
+    private List<ExpirationOption>? options;
+    private double price;
+    public List<long>? expirationDates;
+    private List<Expiration>? expirations;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Ticker = Ticker ?? "AAPL";
+        var request = new YahooOptionsRequest(Ticker, 1642723200);
+        yahooResponse = await Http.GetFromJsonAsync<YahooOptionsResponse>(request.Url);
+        jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./scripts/optionstrikes.js");
+
+        options = yahooResponse?.OptionChain?.ExpirationOptions;
+        price = yahooResponse?.OptionChain?.Result?[0].Quote?.RegularMarketPrice ?? 0;
+        expirationDates = yahooResponse?.OptionChain?.Result?[0].ExpirationDates;
+        expirations = yahooResponse?.OptionChain?.Result?[0].ExpirationValues ?? new List<Expiration>();
+    }
+
+    public async Task ToggleRow(long ticks)
+    {
+        await jsModule.InvokeVoidAsync("toggleRow", ticks);
+    }
+}

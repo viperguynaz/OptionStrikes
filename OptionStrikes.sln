@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OptionStrikes", "OptionStrikes\OptionStrikes.csproj", "{48B15F3A-349C-4A4B-96EE-D77A477EB9F2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OptionStrikes", "OptionStrikes\OptionStrikes.csproj", "{48B15F3A-349C-4A4B-96EE-D77A477EB9F2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

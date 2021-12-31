@@ -465,12 +465,12 @@ namespace OptionStrikes.Entities
     public class Expiration
     {
         public long Ticks { get; set; }
-        public string Date { get; set; }
+        public DateTime Date { get; set; }
 
         public Expiration(long ticks)
         {
             Ticks = ticks;
-            Date = UnixTimeHelper.ToDateTime(ticks).ToShortDateString();
+            Date = UnixTimeHelper.ToDateTime(ticks);
         }
     }
 

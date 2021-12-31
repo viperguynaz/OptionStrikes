@@ -1,0 +1,54 @@
+﻿body {
+    font-family: "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+}
+
+table {
+    border-collapse: collapse;
+    min-width: 100%;
+}
+
+th,
+td {
+    padding: 2px;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8rem;
+}
+
+th {
+    position: sticky;
+    top: 0;
+    background: #6c7ae0;
+    font-weight: normal;
+    color: white;
+}
+
+    th:last-child {
+        border: 0;
+    }
+
+td {
+    color: #808080;
+}
+
+/* right-align monetary amounts */
+td[data-monetary-amount] {
+    text-align: right;
+}
+
+/* make the cells output their value */
+td[data-monetary-amount]:after {
+    content: attr(data-monetary-amount);
+    color: green;
+}
+
+/* make debit amounts show up in red */
+td[data-monetary-amount^="-"]:after {
+    color: red;
+}
+
+tr:nth-child(even) td {
+    background: #f8f6ff;
+}
