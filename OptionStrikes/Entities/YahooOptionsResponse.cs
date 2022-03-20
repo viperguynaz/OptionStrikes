@@ -391,7 +391,7 @@ namespace OptionStrikes.Entities
                 var strikeDiffs = strikes.Select(x => Math.Abs(price - x)).ToList();
 
                 var lowStrikeIndex = 0;
-                while (strikes[lowStrikeIndex] < price && lowStrikeIndex < strikes.Count)
+                while (lowStrikeIndex < strikes.Count && strikes[lowStrikeIndex] < price)
                 {
                     lowStrikeIndex++;
                 }

@@ -1,4 +1,4 @@
-﻿@page "/strikes/{ticker?}"
+﻿@page "/strikes/{ticker?}/{ticks:long?}"
 @using Microsoft.JSInterop;
 @using OptionStrikes.Entities
 @inject HttpClient Http
@@ -13,103 +13,70 @@
 }
 else
 {
-    <p>Options for @Ticker | Last price: @price | Expiration: ???</p>
-
-
+    <p>Options for @Ticker | Last price: @price | Expiration: @expiration.Date.ToShortDateString()</p>
     <table>
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Calls</th>
-                <th>Days</th>
-                <th>Puts</th>
-                <th>xxx</th>
+                <th>Strike</th>
+                <th>Bid</th>
+                <th>Ask</th>
+                <th>Last</th>
+                <th>Change</th>
+                <th>Volume</th>
+                <th>OI</th>
             </tr>
         </thead>
-        <tbody>
-            @foreach (var expiration in expirations ?? Enumerable.Empty<Expiration>())
-            {               
-                <tr class="expirations" @onclick="() => ToggleRow(expiration.Ticks)">
-                    <td>@expiration.Date.ToShortDateString()</td>
-                    <td>Calls</td>
-                    <td>@(((TimeSpan)(expiration.Date - DateTime.Now)).Days)d</td>
-                    <td>Puts</td>
-                    <td>xxx</td>
-                </tr>
-                <tr id="@expiration.Ticks" class="hide">
-                    <td colspan="5">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Volume</th>
-                                    <th>OI</th>
-                                    <th>Last</th>
-                                    <th>Change</th>
-                                    <th>Bid</th>
-                                    <th>Ask</th>
-                                    <th>Strike</th>
-                                    <th>Bid</th>
-                                    <th>Ask</th>
-                                    <th>Last</th>
-                                    <th>Change</th>
-                                    <th>Volume</th>
-                                    <th>OI</th>
-                                </tr>
-                            </thead>
-                            <tbody class="hide">
-                                @foreach (var option in options ?? Enumerable.Empty<ExpirationOption>())
-                                {
-                                    <tr>
-                                        <td>@option.CallVolume</td>
-                                        <td>@option.CallOpenInterest</td>
-                                        <td>@option.CallLastPrice.ToString("C2")</td>
-                                        <td data-monetary-amount="@option.CallChange.ToString("C2")"></td>
-                                        <td>@option.CallBid.ToString("C2")</td>
-                                        <td>@option.CallAsk.ToString("C2")</td>
-                                        <td>@option.Strike.ToString("C2")</td>
-                                        <td>@option.PutBid.ToString("C2")</td>
-                                        <td>@option.PutAsk.ToString("C2")</td>
-                                        <td>@option.PutLastPrice.ToString("C2")</td>
-                                        <td data-monetary-amount="@option.PutChange.ToString("C2")"></td>
-                                        <td>@option.PutVolume</td>
-                                        <td>@option.PutOpenInterest</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>    
-                    </td>
+        <tbody class="hide">
+            @foreach (var option in options ?? Enumerable.Empty<Put>())
+            {
+                <tr>
+                    <td>@option.Strike.ToString("C2")</td>
+                    <td>@option.Bid.ToString("C2")</td>
+                    <td>@option.Ask.ToString("C2")</td>
+                    <td>@option.LastPrice.ToString("C2")</td>
+                    <td data-monetary-amount="@option.Change.ToString("C2")"></td>
+                    <td>@option.Volume</td>
+                    <td>@option.OpenInterest</td>
                 </tr>
             }
         </tbody>
-    </table>
+    </table>    
+
 
 }
 
 @code {
     [Parameter]
     public string? Ticker { get; set; }
+    [Parameter]
+    public long? Ticks { get; set; }
 
     [Inject]
     public IJSRuntime JSRuntime { get; set; }
     private IJSObjectReference jsModule;
 
     private YahooOptionsResponse? yahooResponse;
-    private List<ExpirationOption>? options;
+    private List<Put>? options;
     private double price;
-    public List<long>? expirationDates;
-    private List<Expiration>? expirations;
+    private List<long>? expirationDates;
+    private Expiration expiration;
 
     protected override async Task OnInitializedAsync()
     {
         Ticker = Ticker ?? "AAPL";
-        var request = new YahooOptionsRequest(Ticker, 1642723200);
+        Ticks = Ticks ?? 1649894400;
+        expiration = new Expiration(Ticks.Value);
+        var request = new YahooOptionsRequest(Ticker, Ticks);
         yahooResponse = await Http.GetFromJsonAsync<YahooOptionsResponse>(request.Url);
         jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./scripts/optionstrikes.js");
 
-        options = yahooResponse?.OptionChain?.ExpirationOptions;
-        price = yahooResponse?.OptionChain?.Result?[0].Quote?.RegularMarketPrice ?? 0;
-        expirationDates = yahooResponse?.OptionChain?.Result?[0].ExpirationDates;
-        expirations = yahooResponse?.OptionChain?.Result?[0].ExpirationValues ?? new List<Expiration>();
+        var result = yahooResponse?.OptionChain?.Result?[0];
+        if (result != null)
+        {
+            options = result.Options?[0].Puts ?? new List<Put>();
+            price = result.Quote?.RegularMarketPrice ?? 0;
+            expirationDates = result.ExpirationDates ?? new List<long>();
+        }
     }
 
     public async Task ToggleRow(long ticks)
