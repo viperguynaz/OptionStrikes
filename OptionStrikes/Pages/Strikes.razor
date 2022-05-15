@@ -13,7 +13,7 @@
 }
 else
 {
-    <p>Options for @Ticker | Last price: @price | Expiration: @expiration.Date.ToShortDateString()</p>
+    <p>Options for @Ticker | Last price: @price</p>
     <table>
         <thead>
             <tr>
@@ -41,8 +41,6 @@ else
             }
         </tbody>
     </table>    
-
-
 }
 
 @code {
@@ -59,13 +57,13 @@ else
     private List<Put>? options;
     private double price;
     private List<long>? expirationDates;
-    private Expiration expiration;
+    //private Expiration expiration;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         Ticker = Ticker ?? "AAPL";
-        Ticks = Ticks ?? 1649894400;
-        expiration = new Expiration(Ticks.Value);
+        Ticks = Ticks;
+        //expiration = new Expiration(Ticks.Value);
         var request = new YahooOptionsRequest(Ticker, Ticks);
         yahooResponse = await Http.GetFromJsonAsync<YahooOptionsResponse>(request.Url);
         jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./scripts/optionstrikes.js");
@@ -77,10 +75,5 @@ else
             price = result.Quote?.RegularMarketPrice ?? 0;
             expirationDates = result.ExpirationDates ?? new List<long>();
         }
-    }
-
-    public async Task ToggleRow(long ticks)
-    {
-        await jsModule.InvokeVoidAsync("toggleRow", ticks);
     }
 }
